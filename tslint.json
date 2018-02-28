@@ -1,0 +1,15 @@
+{
+    "rules": {
+        "no-arg": true,
+        "no-console": {
+            "severity": "warning"
+        },
+        "no-empty-interface": true,
+        "typedef": [true, "variable-declaration", "call-signature", "parameter"],
+        "no-debugger": true,
+        "no-duplicate-variable": true,
+        "no-empty": true,
+        "no-string-literal": true,
+        "no-unused-expression": [true, "allow-fast-null-checks"]
+    }
+}

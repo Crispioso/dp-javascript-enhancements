@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "module": "es6",
+        "sourceMap": true,
+        "lib": [
+            "es7",
+            "dom",
+            "dom.iterable"
+        ]
+    },
+    "include": [
+        "src/**/*.ts"
+    ]
+}
