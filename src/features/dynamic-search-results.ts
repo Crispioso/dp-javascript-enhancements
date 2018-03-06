@@ -130,7 +130,7 @@ class DynamicSearchResults {
             if (!input) {
                 continue;
             }
-            
+
             input.value = eventQueries[inputName] || "";
             this.currentQueries[inputName] = eventQueries[inputName];
         }
@@ -289,62 +289,27 @@ class DynamicSearchResults {
 
         const queryParts: string[] = query.replace("?", "").split("&");
         const filters: string[] = [];
-        let formData: FilterFormData = {};
+        let newFormData: FilterFormData = {};
 
-        queryParts.forEach((query: string) => {
+        for (let index = 0; index < queryParts.length; index++) {
+            const query = queryParts[index];
             const name: string = query.split('=')[0];
             const value: string = query.split('=')[1];
-            switch(name) {
-                case("q"): {
-                    formData.q = value;
-                    break;
-                }
-                case("query"): {
-                    formData.query = value;
-                    break;
-                }
-                case("filter"): {
-                    filters.push(value);
-                    break;
-                }
-                case("size"): {
-                    formData.size = value;
-                    break;
-                }
-                case("sortBy"): {
-                    formData.sortBy = value;
-                    break;
-                }
-                case("fromDateDay"): {
-                    formData.fromDateDay = value;
-                    break;
-                }
-                case("fromDateMonth"): {
-                    formData.fromDateMonth = value;
-                    break;
-                }
-                case("fromDateYear"): {
-                    formData.fromDateYear = value;
-                    break;
-                }
-                case("toDateDay"): {
-                    formData.toDateDay = value;
-                    break;
-                }
-                case("toDateMonth"): {
-                    formData.toDateMonth = value;
-                    break;
-                }
-                case("toDateYear"): {
-                    formData.toDateYear = value;
-                    break;
-                }
-            }
-        });
 
-        formData.filters = filters;
+            if (name === "filter") {
+                filters.push(value);
+                continue;
+            }
+
+            if (queryInputNames.indexOf(name) >= 0) {
+                newFormData[name] = value;
+                continue;
+            }
+        };
+
+        newFormData.filters = filters;
         
-        return formData;
+        return newFormData;
     }
 
     mapFormDataToQueryString(formData: FilterFormData): string {
