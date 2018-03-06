@@ -15,6 +15,10 @@ interface FilterFormData {
     toDateYear?: string,
 }
 
+const queryInputNames = [
+    "q", "query", "filter", "sortBy", "size", "fromDateDay", "fromDateMonth", "fromDateYear", "toDateDay", "toDateMonth", "toDateYear"
+];
+
 const resultsErrorMessage: HTMLElement = document.createElement('div');
 resultsErrorMessage.innerHTML = "<p>Sorry, something went wrong whilst trying to get your search results.</p>";
 
@@ -29,7 +33,7 @@ class DynamicSearchResults {
     constructor() {
         this.resultsElement = document.querySelector('.results');
         this.queryTextElement = document.querySelector('.search-page__results-text');
-        this.paginationElement = document.querySelector('#js-pagination-container div');
+        this.paginationElement = document.querySelector('#js-pagination-container');
         this.dynamicSearchForms = document.querySelectorAll('form.js-auto-submit__form');
         this.currentQueries = {};
     }
@@ -116,35 +120,56 @@ class DynamicSearchResults {
             }
         }
 
-        if (eventQueries.query !== this.currentQueries.query) {
-            const keywordInput: HTMLInputElement = document.querySelector('input[name="query"]');
-            keywordInput.value = eventQueries.query || "";
-            this.currentQueries.query = eventQueries.query;
-        }
-        
-        if (eventQueries.fromDateDay !== this.currentQueries.fromDateDay) {
-            const dateInput: HTMLInputElement = document.querySelector('input[name="fromDateDay"]');
-            dateInput.value = eventQueries.fromDateDay || "";
-            this.currentQueries.fromDateDay = eventQueries.fromDateDay;
-        }
-        
-        if (eventQueries.fromDateMonth !== this.currentQueries.fromDateMonth) {
-            const dateInput: HTMLInputElement = document.querySelector('input[name="fromDateMonth"]');
-            dateInput.value = eventQueries.fromDateMonth || "";
-            this.currentQueries.fromDateMonth = eventQueries.fromDateMonth;
-        }
-        
-        if (eventQueries.fromDateYear !== this.currentQueries.fromDateYear) {
-            const dateInput: HTMLInputElement = document.querySelector('input[name="fromDateYear"]');
-            dateInput.value = eventQueries.fromDateYear || "";
-            this.currentQueries.fromDateYear = eventQueries.fromDateYear;
+        for (let index = 0; index < queryInputNames.length; index++) {
+            const inputName = queryInputNames[index];
+            if (inputName === "filters") {
+                continue;
+            }
+
+            const input: HTMLInputElement = document.querySelector('input[name="' + inputName + '"]');
+            if (!input) {
+                continue;
+            }
+            
+            input.value = eventQueries[inputName] || "";
+            this.currentQueries[inputName] = eventQueries[inputName];
         }
 
-        if (eventQueries.sortBy !== this.currentQueries.sortBy) {
-            const sortInput: HTMLInputElement = document.querySelector('select[name="sortBy"]');
-            sortInput.value = eventQueries.sortBy || "";
-            this.currentQueries.sortBy = eventQueries.sortBy;
-        }
+        // if (eventQueries.query !== this.currentQueries.query) {
+        //     const keywordInput: HTMLInputElement = document.querySelector('input[name="query"]');
+        //     keywordInput.value = eventQueries.query || "";
+        //     this.currentQueries.query = eventQueries.query;
+        // }
+        
+        // if (eventQueries.fromDateDay !== this.currentQueries.fromDateDay) {
+        //     const dateInput: HTMLInputElement = document.querySelector('input[name="fromDateDay"]');
+        //     dateInput.value = eventQueries.fromDateDay || "";
+        //     this.currentQueries.fromDateDay = eventQueries.fromDateDay;
+        // }
+        
+        // if (eventQueries.fromDateMonth !== this.currentQueries.fromDateMonth) {
+        //     const dateInput: HTMLInputElement = document.querySelector('input[name="fromDateMonth"]');
+        //     dateInput.value = eventQueries.fromDateMonth || "";
+        //     this.currentQueries.fromDateMonth = eventQueries.fromDateMonth;
+        // }
+        
+        // if (eventQueries.fromDateYear !== this.currentQueries.fromDateYear) {
+        //     const dateInput: HTMLInputElement = document.querySelector('input[name="fromDateYear"]');
+        //     dateInput.value = eventQueries.fromDateYear || "";
+        //     this.currentQueries.fromDateYear = eventQueries.fromDateYear;
+        // }
+
+        // if (eventQueries.sortBy !== this.currentQueries.sortBy) {
+        //     const sortInput: HTMLInputElement = document.querySelector('select[name="sortBy"]');
+        //     sortInput.value = eventQueries.sortBy || "";
+        //     this.currentQueries.sortBy = eventQueries.sortBy;
+        // }
+        
+        // if (eventQueries.size !== this.currentQueries.size) {
+        //     const sizeInput: HTMLInputElement = document.querySelector('select[name="size"]');
+        //     sizeInput.value = eventQueries.size || "";
+        //     this.currentQueries.size = eventQueries.size;
+        // }
     }
 
     fetchResults(url: string): Promise<{results: HTMLElement, queryText: HTMLElement, pagination: HTMLElement}> {
@@ -206,9 +231,6 @@ class DynamicSearchResults {
             this.emptyAllDynamicText();
             this.resultsElement.appendChild(response.results);
             this.queryTextElement.appendChild(response.queryText);
-            
-            console.log(this.paginationElement);
-            console.log(response.pagination);
             this.paginationElement.appendChild(response.pagination);
         }).catch(error => {
             this.emptyAllDynamicText();
@@ -220,7 +242,7 @@ class DynamicSearchResults {
 
     buildFormData(form: HTMLFormElement): FilterFormData {
         const inputs: NodeListOf<HTMLInputElement> = form.querySelectorAll('input, select');
-        const dataPairs: string[] = [];
+        // const queriesNotInForm: string[] = [...queryInputNames];
         const currentFormData: FilterFormData = {...this.currentQueries};
         const filters: string[] = []; 
         let newFormData: FilterFormData = {...currentFormData};
@@ -228,57 +250,30 @@ class DynamicSearchResults {
         
         for (index; index < inputs.length; ++index) {
             const element: HTMLInputElement = inputs[index];
-            if (element.name === '') {
-                return;
-            }
+            const isHidden: boolean = element.getAttribute("type") === "hidden";
             
-            switch(element.name) {
-                case("q"): {
-                    newFormData.q = element.value;
-                    break;
-                }
-                case("query"): {
-                    newFormData.query = element.value;
-                    break;
-                }
-                case("filter"): {
-                    if (element.checked) {
-                        filters.push(element.value);
-                    }
-                    break;
-                }
-                case("size"): {
-                    newFormData.size = element.value;
-                    break;
-                }
-                case("sortBy"): {
-                    newFormData.sortBy = element.value;
-                    break;
-                }
-                case("fromDateDay"): {
-                    newFormData.fromDateDay = element.value;
-                    break;
-                }
-                case("fromDateMonth"): {
-                    newFormData.fromDateMonth = element.value;
-                    break;
-                }
-                case("fromDateYear"): {
-                    newFormData.fromDateYear = element.value;
-                    break;
-                }
-                case("toDateDay"): {
-                    newFormData.toDateDay = element.value;
-                    break;
-                }
-                case("toDateMonth"): {
-                    newFormData.toDateMonth = element.value;
-                    break;
-                }
-                case("toDateYear"): {
-                    newFormData.toDateYear = element.value;
-                    break;
-                }
+            if (element.name === '') {
+                continue;
+            }
+
+            if (isHidden) {
+                continue;
+            }
+
+            if (element.name === "filter" && element.checked) {
+                // queriesNotInForm.splice(queriesNotInForm.indexOf(element.name), 1);
+                filters.push(element.value);
+                continue;
+            }
+
+            if (element.name === "filter" && !element.checked) {
+                continue;
+            }
+
+            if (queryInputNames.indexOf(element.name) >= 0) {
+                // queriesNotInForm.splice(queriesNotInForm.indexOf(element.name), 1);
+                newFormData[element.name] = element.value;
+                continue;
             }
         }
 
