@@ -21,6 +21,7 @@ resultsErrorMessage.innerHTML = "<p>Sorry, something went wrong whilst trying to
 class DynamicSearchResults {
     resultsElement: HTMLElement;
     queryTextElement: HTMLElement;
+    paginationElement: HTMLElement;
     currentQueries: FilterFormData;
     setCurrentQueries: Function;
     dynamicSearchForms: NodeListOf<HTMLFormElement>;
@@ -28,6 +29,7 @@ class DynamicSearchResults {
     constructor() {
         this.resultsElement = document.querySelector('.results');
         this.queryTextElement = document.querySelector('.search-page__results-text');
+        this.paginationElement = document.querySelector('#js-pagination-container div');
         this.dynamicSearchForms = document.querySelectorAll('form.js-auto-submit__form');
         this.currentQueries = {};
     }
@@ -145,7 +147,7 @@ class DynamicSearchResults {
         }
     }
 
-    fetchResults(url: string): Promise<{results: HTMLElement, queryText: HTMLElement}> {
+    fetchResults(url: string): Promise<{results: HTMLElement, queryText: HTMLElement, pagination: HTMLElement}> {
         
         const fetchOptions: RequestInit = {
             credentials: 'include',
@@ -167,8 +169,10 @@ class DynamicSearchResults {
                 const queryTextContainer: HTMLElement = document.createElement('div');
                 const queryText: HTMLElement = element.querySelector('.search-page__results-text');
                 queryTextContainer.innerHTML = queryText.innerHTML;
+                
+                const pagination: HTMLElement = element.querySelector('#js-pagination-container nav') || document.createElement('div');
 
-                resolve({results, queryText: queryTextContainer});
+                resolve({results, queryText: queryTextContainer, pagination});
             }).catch(error => {
                 const errorMsg: HTMLElement = document.createElement("p");
                 errorMsg.innerHTML = "There was an error fetching the results";
@@ -178,19 +182,34 @@ class DynamicSearchResults {
     }
 
     emptyAllDynamicText(): void {
-        while (this.resultsElement.firstChild) {
-            this.resultsElement.removeChild(this.resultsElement.firstChild);
-        };
-        while (this.queryTextElement.firstChild) {
-            this.queryTextElement.removeChild(this.queryTextElement.firstChild);
-        };
+        if (this.resultsElement) {
+            while (this.resultsElement.firstChild) {
+                this.resultsElement.removeChild(this.resultsElement.firstChild);
+            };
+        }
+
+        if (this.queryTextElement) {
+            while (this.queryTextElement.firstChild) {
+                this.queryTextElement.removeChild(this.queryTextElement.firstChild);
+            };
+        }
+
+        if (this.paginationElement) {
+            while (this.paginationElement.firstChild) {
+                this.paginationElement.removeChild(this.paginationElement.firstChild);
+            };
+        }
     }
 
     updateResults(url: string): void {
-        this.fetchResults(url).then((response: {results: HTMLElement, queryText: HTMLElement}): void => {
+        this.fetchResults(url).then((response: {results: HTMLElement, queryText: HTMLElement, pagination: HTMLElement}): void => {
             this.emptyAllDynamicText();
             this.resultsElement.appendChild(response.results);
             this.queryTextElement.appendChild(response.queryText);
+            
+            console.log(this.paginationElement);
+            console.log(response.pagination);
+            this.paginationElement.appendChild(response.pagination);
         }).catch(error => {
             this.emptyAllDynamicText();
             this.resultsElement.appendChild(resultsErrorMessage);
